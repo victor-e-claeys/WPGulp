@@ -60,6 +60,8 @@ var sort         = require('gulp-sort'); // Recommended to prevent unnecessary c
 var path         = require('path');
 var multidest    = require('gulp-multi-dest');
 var zip          = require('gulp-zip'); 
+var jshint       = require('gulp-jshint');
+var stylish      = require('jshint-stylish');
 
 
 function getPath(string){
@@ -69,12 +71,12 @@ function getPath(string){
 
 
 /**
- * Task: `init-dir`.
+ * Task: `directories`.
  *
  * Creates directories (if required) from config
  *
  */
-gulp.task('init-dir', function(){
+gulp.task('directories', function(){
   var paths = [
     config.translation.dest,
     config.style.src,
@@ -89,7 +91,9 @@ gulp.task('init-dir', function(){
   paths.forEach(function(path,i){
     paths[i] = getPath(path);
   });
-  return gulp.src('*.*', {read: false}).pipe(multidest(paths));
+  return gulp.src('*.*', {read: false})
+    .pipe(multidest(paths))
+    .pipe( notify( { message: 'TASK: "directories" Completed! 💯', onLast: true } ) );
 });
 
 
@@ -222,6 +226,8 @@ gulp.task( 'browser-sync', function() {
     gulp.src( config.js.custom.src )
     .pipe( concat( config.js.custom.file + '.js' ) )
     .pipe( lineec() ) // Consistent Line Endings for non UNIX systems.
+    .pipe( jshint() )
+    .pipe( jshint.reporter(stylish) )
     .pipe( gulp.dest( config.js.custom.dest ) )
     .pipe( rename( {
       basename: config.js.custom.file,
@@ -290,7 +296,7 @@ gulp.task( 'browser-sync', function() {
   *
   * Watches for file changes and runs specific tasks.
   */
- gulp.task( 'default', ['init-dir', 'styles', 'vendorsJs', 'customJS', 'images', 'browser-sync'], function () {
+ gulp.task( 'default', ['directories', 'styles', 'vendorsJs', 'customJS', 'images', 'browser-sync'], function () {
   gulp.watch( config.watch.php, reload ); // Reload on PHP file changes.
   gulp.watch( config.watch.style, [ 'styles' ] ); // Reload on SCSS file changes.
   gulp.watch( config.watch.js.vendor, [ 'vendorsJs', reload ] ); // Reload on vendorsJs file changes.
@@ -309,5 +315,6 @@ gulp.task( 'browser-sync', function() {
        file.dirname = config.package.filename + '/' + file.dirname
      }))
      .pipe(zip(config.package.filename + '.zip'))
-     .pipe(gulp.dest(config.package.dest));
+     .pipe(gulp.dest(config.package.dest))
+     .pipe( notify( { message: 'TASK: "package" Completed! 💯', onLast: true } ) );
  })
