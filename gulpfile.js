@@ -20,73 +20,12 @@
  */
 
 /**
- * Configuration.
+ * Load Configuration
  *
- * Project Configuration for gulp tasks.
- *
- * In paths you can add <<glob or array of globs>>. Edit the variables as per your project requirements.
+ * Load gulp file configuration from yml file
  */
-
-// START Editing Project Variables.
-// Project related.
-var project                 = 'WPGulpTheme'; // Project Name.
-var projectURL              = 'wpgulp.dev'; // Local project URL of your already running WordPress site. Could be something like local.dev or localhost:8888.
-var productURL              = './'; // Theme/Plugin URL. Leave it like it is, since our gulpfile.js lives in the root folder.
-
-// Translation related.
-var text_domain             = 'WPGULP'; // Your textdomain here.
-var translationFile         = 'WPGULP.pot'; // Name of the transalation file.
-var translationDestination  = './languages'; // Where to save the translation files.
-var packageName             = 'WPGULP'; // Package name.
-var bugReport               = 'https://AhmadAwais.com/contact/'; // Where can users report bugs.
-var lastTranslator          = 'Ahmad Awais <your_email@email.com>'; // Last translator Email ID.
-var team                    = 'WPTie <your_email@email.com>'; // Team's Email ID.
-
-// Style related.
-var styleSRC                = './assets/css/style.scss'; // Path to main .scss file.
-var styleDestination        = './'; // Path to place the compiled CSS file.
-// Default set to root folder.
-
-// JS Vendor related.
-var jsVendorSRC             = './assets/js/vendor/*.js'; // Path to JS vendor folder.
-var jsVendorDestination     = './assets/js/'; // Path to place the compiled JS vendors file.
-var jsVendorFile            = 'vendors'; // Compiled JS vendors file name.
-// Default set to vendors i.e. vendors.js.
-
-// JS Custom related.
-var jsCustomSRC             = './assets/js/custom/*.js'; // Path to JS custom scripts folder.
-var jsCustomDestination     = './assets/js/'; // Path to place the compiled JS custom scripts file.
-var jsCustomFile            = 'custom'; // Compiled JS custom file name.
-// Default set to custom i.e. custom.js.
-
-// Images related.
-var imagesSRC               = './assets/img/raw/**/*.{png,jpg,gif,svg}'; // Source folder of images which should be optimized.
-var imagesDestination       = './assets/img/'; // Destination folder of optimized images. Must be different from the imagesSRC folder.
-
-// Watch files paths.
-var styleWatchFiles         = './assets/css/**/*.scss'; // Path to all *.scss files inside css folder and inside them.
-var vendorJSWatchFiles      = './assets/js/vendor/*.js'; // Path to all vendor JS files.
-var customJSWatchFiles      = './assets/js/custom/*.js'; // Path to all custom JS files.
-var projectPHPWatchFiles    = './**/*.php'; // Path to all PHP files.
-
-
-// Browsers you care about for autoprefixing.
-// Browserlist https        ://github.com/ai/browserslist
-const AUTOPREFIXER_BROWSERS = [
-    'last 2 version',
-    '> 1%',
-    'ie >= 9',
-    'ie_mob >= 10',
-    'ff >= 30',
-    'chrome >= 34',
-    'safari >= 7',
-    'opera >= 23',
-    'ios >= 7',
-    'android >= 4',
-    'bb >= 10'
-  ];
-
-// STOP Editing Project Variables.
+var read = require('read-yaml');
+const config = read.sync('gulpfile.config.yml');
 
 /**
  * Load Plugins.
@@ -118,6 +57,41 @@ var browserSync  = require('browser-sync').create(); // Reloads browser and inje
 var reload       = browserSync.reload; // For manual browser reload.
 var wpPot        = require('gulp-wp-pot'); // For generating the .pot file.
 var sort         = require('gulp-sort'); // Recommended to prevent unnecessary changes in pot-file.
+var path         = require('path');
+var multidest    = require('gulp-multi-dest');
+var zip          = require('gulp-zip'); 
+
+
+function getPath(string){
+  string = string.replace('**/', '');
+  return string.substring(0, string.lastIndexOf('/') + 1 );
+}
+
+
+/**
+ * Task: `init-dir`.
+ *
+ * Creates directories (if required) from config
+ *
+ */
+gulp.task('init-dir', function(){
+  var paths = [
+    config.translation.dest,
+    config.style.src,
+    config.style.dest,
+    config.js.custom.src,
+    config.js.custom.dest,
+    config.js.vendor.src,
+    config.js.vendor.dest,
+    config.img.src,
+    config.img.dest,
+  ];
+  paths.forEach(function(path,i){
+    paths[i] = getPath(path);
+  });
+  return gulp.src('*.*', {read: false}).pipe(multidest(paths));
+});
+
 
 /**
  * Task: `browser-sync`.
@@ -137,7 +111,7 @@ gulp.task( 'browser-sync', function() {
     // @link http://www.browsersync.io/docs/options/
 
     // Project URL.
-    proxy: projectURL,
+    proxy: config.project.url,
 
     // `true` Automatically open the browser with BrowserSync live server.
     // `false` Stop the browser from automatically opening.
@@ -169,7 +143,7 @@ gulp.task( 'browser-sync', function() {
  *    7. Injects CSS or reloads the browser via browserSync
  */
  gulp.task('styles', function () {
-    gulp.src( styleSRC )
+    gulp.src( config.style.src )
     .pipe( sourcemaps.init() )
     .pipe( sass( {
       errLogToConsole: true,
@@ -182,11 +156,11 @@ gulp.task( 'browser-sync', function() {
     .on('error', console.error.bind(console))
     .pipe( sourcemaps.write( { includeContent: false } ) )
     .pipe( sourcemaps.init( { loadMaps: true } ) )
-    .pipe( autoprefixer( AUTOPREFIXER_BROWSERS ) )
+    .pipe( autoprefixer( config.autoprefix ) )
 
     .pipe( sourcemaps.write ( './' ) )
     .pipe( lineec() ) // Consistent Line Endings for non UNIX systems.
-    .pipe( gulp.dest( styleDestination ) )
+    .pipe( gulp.dest( config.style.dest ) )
 
     .pipe( filter( '**/*.css' ) ) // Filtering stream to only css files
     .pipe( mmq( { log: true } ) ) // Merge Media Queries only for .min.css version.
@@ -198,7 +172,7 @@ gulp.task( 'browser-sync', function() {
       maxLineLen: 10
     }))
     .pipe( lineec() ) // Consistent Line Endings for non UNIX systems.
-    .pipe( gulp.dest( styleDestination ) )
+    .pipe( gulp.dest( config.style.dest ) )
 
     .pipe( filter( '**/*.css' ) ) // Filtering stream to only css files
     .pipe( browserSync.stream() )// Reloads style.min.css if that is enqueued.
@@ -218,17 +192,17 @@ gulp.task( 'browser-sync', function() {
   *     4. Uglifes/Minifies the JS file and generates vendors.min.js
   */
  gulp.task( 'vendorsJs', function() {
-  gulp.src( jsVendorSRC )
-    .pipe( concat( jsVendorFile + '.js' ) )
+  gulp.src( config.js.vendor.src )
+    .pipe( concat( config.js.vendor.file + '.js' ) )
     .pipe( lineec() ) // Consistent Line Endings for non UNIX systems.
-    .pipe( gulp.dest( jsVendorDestination ) )
+    .pipe( gulp.dest( config.js.vendor.dest ) )
     .pipe( rename( {
-      basename: jsVendorFile,
+      basename: config.js.vendor.file,
       suffix: '.min'
     }))
     .pipe( uglify() )
     .pipe( lineec() ) // Consistent Line Endings for non UNIX systems.
-    .pipe( gulp.dest( jsVendorDestination ) )
+    .pipe( gulp.dest( config.js.vendor.dest ) )
     .pipe( notify( { message: 'TASK: "vendorsJs" Completed! 💯', onLast: true } ) );
  });
 
@@ -245,17 +219,17 @@ gulp.task( 'browser-sync', function() {
   *     4. Uglifes/Minifies the JS file and generates custom.min.js
   */
  gulp.task( 'customJS', function() {
-    gulp.src( jsCustomSRC )
-    .pipe( concat( jsCustomFile + '.js' ) )
+    gulp.src( config.js.custom.src )
+    .pipe( concat( config.js.custom.file + '.js' ) )
     .pipe( lineec() ) // Consistent Line Endings for non UNIX systems.
-    .pipe( gulp.dest( jsCustomDestination ) )
+    .pipe( gulp.dest( config.js.custom.dest ) )
     .pipe( rename( {
-      basename: jsCustomFile,
+      basename: config.js.custom.file,
       suffix: '.min'
     }))
     .pipe( uglify() )
     .pipe( lineec() ) // Consistent Line Endings for non UNIX systems.
-    .pipe( gulp.dest( jsCustomDestination ) )
+    .pipe( gulp.dest( config.js.custom.dest ) )
     .pipe( notify( { message: 'TASK: "customJs" Completed! 💯', onLast: true } ) );
  });
 
@@ -274,14 +248,14 @@ gulp.task( 'browser-sync', function() {
   * again, do it with the command `gulp images`.
   */
  gulp.task( 'images', function() {
-  gulp.src( imagesSRC )
+  gulp.src( config.img.src )
     .pipe( imagemin( {
           progressive: true,
           optimizationLevel: 3, // 0-7 low-high
           interlaced: true,
           svgoPlugins: [{removeViewBox: false}]
         } ) )
-    .pipe(gulp.dest( imagesDestination ))
+    .pipe(gulp.dest( config.img.dest ))
     .pipe( notify( { message: 'TASK: "images" Completed! 💯', onLast: true } ) );
  });
 
@@ -296,16 +270,16 @@ gulp.task( 'browser-sync', function() {
   *     4. Generate a .pot file of i18n that can be used for l10n to build .mo file
   */
  gulp.task( 'translate', function () {
-     return gulp.src( projectPHPWatchFiles )
+     return gulp.src( config.watch.php )
          .pipe(sort())
          .pipe(wpPot( {
-             domain        : text_domain,
-             package       : packageName,
-             bugReport     : bugReport,
-             lastTranslator: lastTranslator,
-             team          : team
+             domain        : config.translation.text_domain,
+             package       : config.translation.packageName,
+             bugReport     : config.translation.bugReport,
+             lastTranslator: config.translation.lastTranslator,
+             team          : config.translation.team
          } ))
-        .pipe(gulp.dest(translationDestination + '/' + translationFile ))
+        .pipe(gulp.dest(  config.translation.dest + config.translation.file ))
         .pipe( notify( { message: 'TASK: "translate" Completed! 💯', onLast: true } ) )
 
  });
@@ -316,9 +290,24 @@ gulp.task( 'browser-sync', function() {
   *
   * Watches for file changes and runs specific tasks.
   */
- gulp.task( 'default', ['styles', 'vendorsJs', 'customJS', 'images', 'browser-sync'], function () {
-  gulp.watch( projectPHPWatchFiles, reload ); // Reload on PHP file changes.
-  gulp.watch( styleWatchFiles, [ 'styles' ] ); // Reload on SCSS file changes.
-  gulp.watch( vendorJSWatchFiles, [ 'vendorsJs', reload ] ); // Reload on vendorsJs file changes.
-  gulp.watch( customJSWatchFiles, [ 'customJS', reload ] ); // Reload on customJS file changes.
+ gulp.task( 'default', ['init-dir', 'styles', 'vendorsJs', 'customJS', 'images', 'browser-sync'], function () {
+  gulp.watch( config.watch.php, reload ); // Reload on PHP file changes.
+  gulp.watch( config.watch.style, [ 'styles' ] ); // Reload on SCSS file changes.
+  gulp.watch( config.watch.js.vendor, [ 'vendorsJs', reload ] ); // Reload on vendorsJs file changes.
+  gulp.watch( config.watch.js.custom, [ 'customJS', reload ] ); // Reload on customJS file changes.
  });
+
+
+ /**
+  * Package task
+  *
+  * Creates a package in the 
+  */
+ gulp.task('package', function(){
+   return gulp.src(config.package.files)
+     .pipe(rename(function(file){
+       file.dirname = config.package.filename + '/' + file.dirname
+     }))
+     .pipe(zip(config.package.filename + '.zip'))
+     .pipe(gulp.dest(config.package.dest));
+ })

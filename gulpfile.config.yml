@@ -1,0 +1,66 @@
+---
+project: 
+  name: WPGulpTheme # Project Name.
+  url: wpgulp.dev # Local project URL of your already running WordPress site. Could be something like local.dev or localhost:8888.
+
+package:
+  filename: wpgulptheme
+  files:
+  - "**/*"
+  - "!yarn.lock"
+  - "!package.json"
+  - "!gulpfile.js"
+  - "!gulpfile.config.yml"
+  - "!node_modules/**/*"
+  - "!src/**/*"
+  dest: ./dist/
+
+translation:
+  textdomain: WPGULP # The plugin/theme textdomain
+  file: WPGULP.pot	# Name of the transalation file.
+  dest: ./languages/ # Where to save the translation files.
+  packageName: WPGULP # Package name.
+  bugReport: https://AhmadAwais.com/contact/ # Where can users report bugs.
+  lastTranslator: "Ahmad Awais <your_email@email.com>" # Last translator Email ID.
+  team: "WPTie <your_email@email.com>" # Team's Email ID.
+
+style:
+  src: ./src/scss/style.scss # Path to main .scss file.d
+  dest: ./ # Path to place the compiled CSS file.
+
+js:
+
+  custom:
+    src: ./src/js/custom/*.js # Path to JS custom files
+    dest: ./js/ # Path to place the compiled JS custom file
+    file: custom # Compiled JS custom file name
+
+  vendor:
+    src: ./src/js/vendor/*.js # Path to JA vendor files
+    dest: ./js/ # Path to place the compiled JS vendors file
+    file: vendors # Compiled JS vendors file name
+
+img:
+  src: ./src/img/**/*.{png,jpg,gif,svg} # Source folder of images which should be optimized.
+  dest: ./img/ # Destination folder of optimized images. Must be different from the imagesSRC folder.
+
+watch:
+  style: ./src/scss/**/.scss # Path to all *.scss files inside css folder and inside them.
+  php: ./**/*.php # Path to all PHP files. 
+
+  js:	
+    custom: ./src/js/custom/*.js # Path to all custom JS files.
+    vendor: ./src/js/vendor/*.js # Path to all vendor JS files.
+
+autoprefix: # Browsers you care about for autoprefixing.
+- last 2 versions
+- "> 1%"
+- ie >= 9
+- ie_mob >= 10
+- ff >= 30
+- chrome >= 34
+- safari >= 7
+- opera >= 23
+- ios >= 7
+- android >= 4
+- bb >= 10
