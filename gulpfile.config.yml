@@ -45,7 +45,7 @@ img:
   dest: ./img/ # Destination folder of optimized images. Must be different from the imagesSRC folder.
 
 watch:
-  style: ./src/scss/**/.scss # Path to all *.scss files inside css folder and inside them.
+  style: ./src/scss/**/*.scss # Path to all *.scss files inside css folder and inside them.
   php: ./**/*.php # Path to all PHP files. 
 
   js:	
