@@ -12,7 +12,6 @@ package:
   - "!gulpfile.js"
   - "!gulpfile.config.yml"
   - "!node_modules/**/*"
-  - "!src/**/*"
   dest: ./dist/
 
 translation:
